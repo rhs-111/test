@@ -1,22 +1,23 @@
-from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
 from pyxlsb import open_workbook
-import tempfile, os
+import tempfile, os, base64
 
 app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"status": "ok"}
+class ParseRequest(BaseModel):
+    fileName: str
+    fileBase64: str
 
 @app.post("/parse")
-async def parse_xlsb(file: UploadFile = File(...)):
-    if not file.filename.lower().endswith(".xlsb"):
+async def parse_xlsb(payload: ParseRequest):
+    if not payload.fileName.lower().endswith(".xlsb"):
         raise HTTPException(status_code=400, detail="Only .xlsb files are allowed")
 
     tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".xlsb")
     try:
-        content = await file.read()
-        tmp.write(content)
+        file_bytes = base64.b64decode(payload.fileBase64)
+        tmp.write(file_bytes)
         tmp.close()
 
         rows = []
