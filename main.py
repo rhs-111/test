@@ -15,7 +15,8 @@ async def parse_xlsb(file: UploadFile = File(...)):
 
     tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".xlsb")
     try:
-        tmp.write(await file.read())
+        content = await file.read()
+        tmp.write(content)
         tmp.close()
 
         rows = []
@@ -27,9 +28,15 @@ async def parse_xlsb(file: UploadFile = File(...)):
                     if i == 0:
                         header = values
                     else:
+                        if header is None:
+                            continue
                         rows.append(dict(zip(header, values)))
 
         return {"rows": rows, "count": len(rows)}
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Parse failed: {str(e)}")
+
     finally:
         try:
             os.unlink(tmp.name)
