@@ -1,9 +1,18 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from pyxlsb import open_workbook
+from fastapi.middleware.cors import CORSMiddleware
 import tempfile, os, base64
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["https://huron2--seenudev.sandbox.lightning.force.com"],  # or ["*"] while testing
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 class ParseRequest(BaseModel):
     fileName: str
